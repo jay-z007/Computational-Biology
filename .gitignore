@@ -3,4 +3,4 @@
 *.tar
 *.txt
 *.pkl
-./project/train/
+project/train/
