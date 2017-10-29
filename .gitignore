@@ -1,3 +1,6 @@
 *.sf
 *.tsv
 *.tar
+*.txt
+*.pkl
+./project/train/
