@@ -3,4 +3,5 @@
 *.tar
 *.txt
 *.pkl
+*.csv
 project/train/
