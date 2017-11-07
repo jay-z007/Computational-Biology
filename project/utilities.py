@@ -58,13 +58,13 @@ def load_train_data(path):
 	i = 0
 
 	for file in list_of_files:
-		print i
+		# print i
 		i+= 1
 		label = train_data[train_data['accession']==file]['label']
 		row = []
 
 		row.append(file)
-		row.extend(get_feature_vector(os.path.join(path, file)))
+		row.extend(get_feature_vector(os.path.join(path, file),feature_name='TPM'))
 		row.extend(label)
 		features.append(row)
 
@@ -73,7 +73,8 @@ def load_train_data(path):
 	print features.shape
 	with open("tpm_train.pkl", 'wb') as dump_file:
 		pkl.dump(features,  dump_file)
+	return features
 
 	# print features[:10]
 
-load_train_data('./train')
+# load_train_data('./train')
