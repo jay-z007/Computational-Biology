@@ -76,4 +76,5 @@ def load_train_data(path):
 
 	# print features[:10]
 
-load_train_data('./train')
+if __name__ == "__main__":
+	load_train_data('./train')
