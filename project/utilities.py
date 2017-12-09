@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import pickle as pkl
 
+#import pdb; pdb.set_trace()
 class fasta(object):
 	"""docstring for fasta"""
 
@@ -65,7 +66,7 @@ def load_train_data(path):
 
 		row.append(file)
 		row.extend(get_feature_vector(os.path.join(path, file)))
-		row.extend(labels)
+		row.extend(labels.values[0])
 		features.append(row)
 
 	features = np.array(features)
