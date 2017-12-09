@@ -60,12 +60,12 @@ def load_train_data(path):
 	for file in list_of_files:
 		print i
 		i+= 1
-		label = train_data[train_data['accession']==file]['label']
+		labels = train_data[train_data['accession']==file][['population','sequencing_center']]
 		row = []
 
 		row.append(file)
 		row.extend(get_feature_vector(os.path.join(path, file)))
-		row.extend(label)
+		row.extend(labels)
 		features.append(row)
 
 	features = np.array(features)
@@ -75,6 +75,26 @@ def load_train_data(path):
 		pkl.dump(features,  dump_file)
 
 	# print features[:10]
+
+def equi_classes_feature(accession):
+	
+	feature_vec = []
+	for acc in accessions:
+		filename = './train/' + acc + '/bias/aux_info/eq_classes.txt' 
+		with open(path) as filename:
+			eq_classes = filename.read()
+		eq_classes = eq_classes.split('\n')
+		num_classes = int(eq_classes[1])
+		classes_start_index = 199326
+		avg_feature = 0
+		for i in range(classes_start_index,classes_start_index+num_classes):
+			equi_class = eq_classes[i].split(" ")
+			avg_feature +=float(equi_class[-1])/equi_class[0]
+		
+		feature_vec.append(avg_feature/num_classes)
+
+	return np.array(feature_vec)
+
 
 if __name__ == "__main__":
 	load_train_data('./train')
