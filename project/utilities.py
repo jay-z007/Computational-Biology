@@ -42,10 +42,28 @@ def get_folder_names(path):
 
 
 def get_feature_vector(trans_name='',feature_name='TPM'):
-    file_name = os.path.join(trans_name, "bias/quant.sf")
-    df = pd.read_csv(file_name,sep='\t')
-    tpm = df[feature_name]
-    return tpm.tolist()
+	if feature_name == 'TPM':
+
+		file_name = os.path.join(trans_name, "bias/quant.sf")
+		df = pd.read_csv(file_name,sep='\t')
+		tpm = df[feature_name]
+		return tpm.tolist()
+	elif feature_name == 'EQC':
+		file_name = os.path.join(trans_name,"bias/aux_info/eq_classes.txt")
+		with open(file_name) as file:
+			data = file.read()
+
+		data = data.strip().split('\r\n')
+		data = data[199326:]
+		avg_num_transcripts = 0.0
+		avg_reads_mapped = 0.0
+		for row in data:
+			d = row.split('\t')
+			avg_num_transcripts+=int(d[0])
+			avg_reads_mapped += int(d[-1])
+		avg_num_transcripts/=len(data)
+		avg_reads_mapped /= len(data)
+		return [avg_num_transcripts,avg_reads_mapped]
 
 
 def load_train_data(path):
@@ -66,13 +84,14 @@ def load_train_data(path):
 
 		row.append(file)
 		row.extend(get_feature_vector(os.path.join(path, file)))
+		row.extend(get_feature_vector(os.path.join(path, file),feature_name='EQC'))
 		row.extend(labels.values[0])
 		features.append(row)
 
 	features = np.array(features)
 
 	print features.shape
-	with open("tpm_train.pkl", 'wb') as dump_file:
+	with open("tpm_train_with_eqc.pkl", 'wb') as dump_file:
 		pkl.dump(features,  dump_file)
 
 	# print features[:10]
