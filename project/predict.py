@@ -18,9 +18,6 @@ def main():
 	model_file = sys.argv[1]
 	test_data_root = sys.argv[2]
 	test_label_root = sys.argv[3]
-	# print "model", model_file
-	# print "test_root", test_root
-	# print "test_labels", test_labels
 
 	## Load the config file (if necessary)
 	_cfg = utilities.load_cfg_from_file('cfg_file.yml')
@@ -47,13 +44,16 @@ def main():
 	## Make the Train dataframe
 	print "Making the train dataframe .."
 	folder_names = utilities.get_folder_names(test_data_root)
-	train = pd.DataFrame(np.zeros( (len(folder_names), len(master_set)) ), index=folder_names, dtype='int32')
+	train = pd.DataFrame(np.zeros( (len(folder_names), len(master_set)) ), index=folder_names)
 
 	for folder in folder_names:
 	    acc = all_eq_classes[folder]
 	    
-	    for classes in acc:
-	        train.loc[folder][classes] = acc[classes]
+	    classes = pd.Series(acc)
+	    train.loc[folder] = classes
+
+	train.fillna(0, inplace=True)
+	train = train.astype('int16')
 
 	print "Train dataframe ready .."
 	print ""
@@ -74,6 +74,11 @@ def main():
 	print ""
 
 
+	## Load the models
+	with open(model_file) as f:
+		model = pkl.load(f)
+
+
 	## Use Extra trees classifier and extract important features	
 	print "Finding Feature importance for predicting Population .."
 	X = train.drop(['population', 'sequencing_center'], axis=1)
@@ -85,12 +90,39 @@ def main():
 
 	X_reduced = X.iloc[:, indices[:cutoff]]
 
+	## Loading models from the files
+	predict(X, Y, model['population'])
+	
+
+	## Use Extra trees classifier and extract important features	
+	print "Finding Feature importance for predicting Sequencing Center .."
+	X = train.drop(['population', 'sequencing_center'], axis=1)
+	# Y = train[['population', 'sequencing_center']]
+	Y = train['sequencing_center']
+
+	important_indices = feature_importance(X, Y, _cfg.feature_importance_params)
+	cutoff = importances[importances > _cfg.importance_threshold].shape[0]
+
+	X_reduced = X.iloc[:, indices[:cutoff]]
 
 	## Loading models from the files
-	
+	predict(X, Y, model['sequencing_center'])
 
-	predict(X, Y, _cfg.population_classifier_params)
-	
+
+	## Use Extra trees classifier and extract important features	
+	print "Finding Feature importance for predicting BOTH Sequencing Center and Population .."
+	X = train.drop(['population', 'sequencing_center'], axis=1)
+	# Y = train[['population', 'sequencing_center']]
+	Y = train[['population', 'sequencing_center']]
+
+	important_indices = feature_importance(X, Y, _cfg.feature_importance_params)
+	cutoff = importances[importances > _cfg.importance_threshold].shape[0]
+
+	X_reduced = X.iloc[:, indices[:cutoff]]
+
+	## Loading models from the files
+	predict(X, Y, model['joint_model'])
+
 
 	# ## 
 
