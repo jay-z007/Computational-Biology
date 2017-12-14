@@ -1,0 +1,10 @@
+eq_classes_root : './eq_classes'
+feature_importance_params :
+  n_estimators : 250
+  n_jobs : -1
+  bootstrap : True
+  oob_score : True
+  verbose : 0
+  random_state : 0
+
+importance_threshold : 0.0001

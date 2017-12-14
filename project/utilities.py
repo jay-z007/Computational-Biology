@@ -2,6 +2,9 @@ import os
 import pandas as pd
 import numpy as np
 import pickle as pkl
+import gc
+from easydict import EasyDict as edict
+
 
 #import pdb; pdb.set_trace()
 class fasta(object):
@@ -40,6 +43,14 @@ def get_folder_names(path):
 		# if dirpath.count(os.path.sep) >= 1:
 		# 	break
 
+def load_cfg_from_file(filename):
+	"""Load a config file and merge it into the default options."""
+	import yaml
+
+	with open(filename, 'r') as f:
+		yaml_cfg = edict(yaml.load(f))
+
+	return yaml_cfg
 
 def get_feature_vector(trans_name='',feature_name='TPM'):
 	if feature_name == 'TPM':
@@ -114,6 +125,100 @@ def equi_classes_feature(accession):
 		feature_vec.append(avg_feature/num_classes)
 
 	return np.array(feature_vec)
+
+
+## TODO : remove the hardcoded path
+def create_master_set(path="./train/", path_to_eq_classes="/bias/aux_info/eq_classes.txt"):
+	folder_names = utilities.get_folder_names(path)
+
+	master_set = set()
+	all_eq_c = {}
+	count = 0
+	classes_start_index = 199326
+
+	for f in folder_names:
+		with open(path + f + path_to_eq_classes) as eq_file:
+			eq_c = eq_file.read()
+
+		eq_c = eq_c.strip()
+		eq_c = eq_c.split("\n")
+		eq_c = eq_c[classes_start_index:]
+		
+		eq_c = np.array(eq_c)
+
+		acc_folder = {}
+		
+		try:
+			for i in range(len(eq_c)):
+				e = eq_c[i].split('\t')
+				key = int(''.join(e[:-1]))
+				acc_folder[key] = int(e[-1])
+				master_set.add(key)
+
+		except Exception as err:
+			print err
+			print f,i
+		
+		all_eq_c[f] = acc_folder
+		count+=1
+		print count
+		gc.collect()
+
+	return all_eq_c, master_set
+
+def reindex(path='./train', master_set={}, all_eq_classes={}, eq_classes_root='./eq_classes', save_files=False):
+
+	folder_names = utilities.get_folder_names(path)
+	master_set = list(master_set)
+
+	if save_files:
+		if not os.path.exists(eq_classes_root):
+			os.makedirs(eq_classes_root)
+
+	for count, folder in enumerate(folder_names):
+		if count%50 == 0:
+			print "Reindexing accession folder ", count+1
+		
+		for i in range(len(master_set)):
+			cur = master_set[i]
+
+			if cur in all_eq_classes[folder]:
+				all_eq_classes[folder][i] = all_eq_classes[folder][cur]
+				del all_eq_classes[folder][cur]
+
+		if save_files:
+			with open(eq_classes_root + folder + '.pkl', 'wb') as out_file:
+				pkl.dump(all_eq_classes[folder], out_file)
+
+		gc.collect()
+
+	return all_eq_classes
+
+def feature_importance(X, Y, params):
+
+	# Build a forest and compute the feature importances
+	forest = ExtraTreesClassifier(n_estimators=params.n_estimators, n_jobs=params.n_jobs, bootstrap=params.bootstrap, 
+									oob_score=params.oob_score, verbose=params.verbose, random_state=params.random_state)
+
+	# using out-of-bag samples for testing generalization accuracy
+
+	forest.fit(X, Y)
+	importances = forest.feature_importances_
+
+	indices = np.argsort(importances)[::-1]
+
+	# Print the feature ranking
+	print("Feature ranking:")
+
+	for f in range(X.shape[1])[:15]:
+		print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
+
+	return indices
+
+
+def predict(X_test, Y_test, model):
+	y_pred = model.predict(X_test)
+	print f1_score(y_test, y_pred, average='macro')
 
 
 if __name__ == "__main__":
