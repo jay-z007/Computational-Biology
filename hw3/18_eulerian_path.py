@@ -2,7 +2,7 @@ from copy import copy, deepcopy
 import pdb
 import sys
 sys.setrecursionlimit(2100)
-# pdb.set_trace()
+pdb.set_trace()
 
 trail = []
 V = []
@@ -81,8 +81,8 @@ def semi_balanced_nodes(G):
             else:
                 counts[dst] = 1
 
-    semi_balanced_nodes = [(k, v) for k, v in counts.items() if v != 0]
-    return semi_balanced_nodes
+    un_balanced_nodes = [(k, v) for k, v in counts.items() if v != 0]
+    return un_balanced_nodes
 
 
 def is_bridge(g, v):
@@ -98,8 +98,10 @@ def is_bridge(g, v):
 
 def _fleury(g, curr):
     # print "\n", curr, g
-
+    count = 0
     while curr in g:
+        # count+=1
+        # print count
         if len(g[curr]) == 1:
             dst = g[curr][0]
             g[curr].remove(dst)
@@ -120,6 +122,8 @@ def _fleury(g, curr):
                 break
                 # _fleury(g, dst)
                 # return
+        if all([is_bridge(g,dst) for dst in g[curr]]):
+            return
 
     if curr not in g:
         trail.append(curr)
@@ -131,31 +135,43 @@ def fleury(G):
 		checks if G has eulerian cycle or trail
 	'''
     odn = semi_balanced_nodes(G)
-    print odn
-    if len(odn) > 2 or len(odn) == 1:
-        return 'Not Eulerian Graph'
-    else:
-        g = copy(G)
-        if len(odn) == 2:
+    # print odn
+    st = min(odn,key=lambda o: o[1])
+    g = copy(G)
+    _fleury(deepcopy(g), st[0])
+    print trail
+    # if len(odn) > 2 or len(odn) == 1:
+    #     return 'Not Eulerian Graph'
+    # else:
+        # g = copy(G)
+    #     if len(odn) == 2:
 
-            i = 0
-            while len(set(trail)) != len(V):
-                if odn[i][0] in G:
-                    print "ohh yeah", odn[i]
-                    _fleury(deepcopy(g), odn[i][0])
-                print trail, V
-                i += 1
+    #         i = 0
+    #         while len(set(trail)) != len(V):
+    #             if odn[i][0] in G:
+    #                 print "ohh yeah", odn[i]
+    #                 _fleury(deepcopy(g), odn[i][0])
+    #             print trail, V
+    #             i += 1
 
-        else:
-            u = list(g)[0]
-            _fleury(deepcopy(g), u)
+    #     else:
+    #         u = list(g)[0]
+    #         _fleury(deepcopy(g), u)
 
     # print g
 
-
 def main():
     global V
-    with open('graph_long.txt', 'rt') as in_file:
+
+    data = """0 -> 2
+1 -> 3
+2 -> 1
+3 -> 0,4
+6 -> 3,7
+7 -> 8
+8 -> 9
+9 -> 6"""
+    with open('../../compBio/hw3/eulerian_path.txt', 'rt') as in_file:
         data = in_file.read()
 
     graph = {}
