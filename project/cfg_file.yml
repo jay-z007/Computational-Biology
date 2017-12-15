@@ -7,4 +7,11 @@ feature_importance_params :
   verbose : 0
   random_state : 0
 
+cutoff : 25000
+multi_features : 'multi_features.pkl'
+pop_features : 'pop_features.pkl'
+seq_features : 'seq_features.pkl'
+
+all_scalers : 'all_scalers.pkl'
+binarizer : 'binarizer.pkl'
 importance_threshold : 0.0001

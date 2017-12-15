@@ -4,6 +4,7 @@ import numpy as np
 import pickle as pkl
 import gc
 from easydict import EasyDict as edict
+from sklearn.metrics import f1_score
 
 
 #import pdb; pdb.set_trace()
@@ -129,15 +130,15 @@ def equi_classes_feature(accession):
 
 ## TODO : remove the hardcoded path
 def create_master_set(path="./train/", path_to_eq_classes="/bias/aux_info/eq_classes.txt"):
-	folder_names = utilities.get_folder_names(path)
+	folder_names = get_folder_names(path)
 
-	master_set = set()
-	all_eq_c = {}
+	# master_set = set()
+	all_eq_c = {}		
 	count = 0
 	classes_start_index = 199326
 
 	for f in folder_names:
-		with open(path + f + path_to_eq_classes) as eq_file:
+		with open(os.path.join(path, f + path_to_eq_classes)) as eq_file:
 			eq_c = eq_file.read()
 
 		eq_c = eq_c.strip()
@@ -153,7 +154,7 @@ def create_master_set(path="./train/", path_to_eq_classes="/bias/aux_info/eq_cla
 				e = eq_c[i].split('\t')
 				key = int(''.join(e[:-1]))
 				acc_folder[key] = int(e[-1])
-				master_set.add(key)
+				# master_set.add(key)
 
 		except Exception as err:
 			print err
@@ -164,11 +165,11 @@ def create_master_set(path="./train/", path_to_eq_classes="/bias/aux_info/eq_cla
 		print count
 		gc.collect()
 
-	return all_eq_c, master_set
+	return all_eq_c
 
 def reindex(path='./train', master_set={}, all_eq_classes={}, eq_classes_root='./eq_classes', save_files=False):
 
-	folder_names = utilities.get_folder_names(path)
+	folder_names = get_folder_names(path)
 	master_set = list(master_set)
 
 	if save_files:
@@ -216,9 +217,9 @@ def feature_importance(X, Y, params):
 	return indices
 
 
-def predict(X_test, Y_test, model):
+def predict(X_test, y_test, model):
 	y_pred = model.predict(X_test)
-	print f1_score(y_test, y_pred, average='macro')
+	print "The f1-score is:", f1_score(y_test, y_pred, average='macro')
 
 
 if __name__ == "__main__":
