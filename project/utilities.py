@@ -40,7 +40,7 @@ def fasta_read(filename):
 def get_folder_names(path):
 	list_of_files = {}
 	for (dirpath, dirnames, filenames) in os.walk(path):
-		return  dirnames
+		return  dirnames[:30]
 		# if dirpath.count(os.path.sep) >= 1:
 		# 	break
 
